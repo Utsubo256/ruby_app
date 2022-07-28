@@ -1,0 +1,75 @@
+<%
+require 'active_record'
+ActiveRecord::Base.establish_connection(
+  adapter: "postgresql",
+  host: "localhost",
+  username: "utb",
+  password: "",
+  database: "myapp"
+)
+Time.zone_default = Time.find_zone! 'Tokyo'
+ActiveRecord::Base.default_timezone = :local
+con = ActiveRecord::Base.connection
+
+class Bookinfo < ActiveRecord::Base
+end
+
+sth = con.select_all("select * from bookinfos #{where_data};")
+%>
+
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" type="text/css" href="default.css">
+  <title>蔵書管理</title>
+</head>
+<body>
+  <h1>蔵書管理</h1>
+
+  <% unless sth.to_hash.size > 0 %>
+  <%# 検索結果がないとき %>
+  <h2>該当データがありません</h2>
+  <p>検索条件を見直してから実行してください |
+  <a href="list.html.erb">蔵書データの表示</a> |
+  <a href="index.html">メニュー画面に戻る</a></p>
+  <% else %>
+  <%# 検索結果があったとき %>
+  <h2>検索結果の表示</h2>
+  <p>処理する蔵書データを選択してください |
+  <a href="list.html.erb">蔵書データの表示(検索の解除)</a> |
+  <a href="index.html">メニュー画面に戻る</a></p>
+  <hr>
+  <%# 修正データを表示する アクションはlist %>
+  <form method="post" action="list">
+    <table>
+      <tr>
+        <%# テーブルの項目を取り出して表の項目行を表示する %>
+        <th>削除</th><th>修正</th>
+        <% ['id', 'title', 'author', 'page', 'publish_date'].each { |name| %>
+          <td><%= name %></td>
+        <% } %>
+      </tr>
+
+      <% sth.to_hash.each { |row| %>
+        <tr>
+        <% ['id', 'title', 'author', 'page', 'publish_date'].each { |name| %>
+          <% if name == 'id' %>
+            <%# valueに選択したidの値の後に処理(.delete, .edit)を結合した文字列を設定する %>
+            <td><input type="radio" name="operation" value=<%= "#{row[name]}.delete" %>></td>
+            <td><input type="radio" name="operation" value=<%= "#{row[name]}.edit" %>></td>
+          <% end %>
+          <td><%= row[name].to_s %></td>
+        <% } %>
+        </tr>
+      <% } %>
+    </table>
+    <input type="submit" value="選択した処理を実行" />
+  </form>
+  <% end %>
+  <hr>
+
+</body>
+</html>

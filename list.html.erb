@@ -1,0 +1,61 @@
+<%
+require 'active_record'
+ActiveRecord::Base.establish_connection(
+  adapter: "postgresql",
+  host: "localhost",
+  username: "utb",
+  password: "",
+  database: "myapp"
+)
+Time.zone_default = Time.find_zone! 'Tokyo'
+ActiveRecord::Base.default_timezone = :local
+@con = ActiveRecord::Base.connection
+
+class Bookinfo < ActiveRecord::Base
+end
+
+sth = @con.select_all("select * from bookinfos;")
+%>
+
+<html>
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" type="text/css" href="default.css">
+  <title>蔵書管理</title>
+</head>
+<body>
+  <h1>蔵書管理</h1>
+  <h2>蔵書データの表示</h2>
+  <p>処理する蔵書データを選択してください |
+  <a href="entry.html.erb">蔵書データの登録</a> |
+  <a href="retrieve.html.erb">蔵書データの検索</a> |
+  <a href="index.html">メニュー画面に戻る</a></p>
+  <hr>
+  <form method="post" action="list">
+    <table>
+      <tr>
+        <th>削除</th><th>修正</th>
+        <% sth.to_hash[0].keys.each {|key| %>
+        <th><%= key %></th>
+        <% } %>
+      </tr>
+
+      <% sth.to_hash.each {|ss| %>
+      <tr>
+        <% ss.each {|key, value| %>
+          <% if key == 'id' %>
+            <td><input type="radio" name="operation" value=<%= "#{value}.delete" %> /></td>
+            <td><input type="radio" name="operation" value=<%= "#{value}.edit" %> /></td>
+          <% end %>
+          <td><%= value %></td>
+        <% } %>
+      </tr>
+      <% } %>
+
+    </table>
+    <input type="submit" value="選択した処理を実行" />
+    <hr>
+  </form>
+
+</body>
+</html>
